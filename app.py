@@ -29,6 +29,15 @@ def acessar_sergoias(wait):
     botao_link_sergoias.click()
 
 
+def selecionar_nova_atividade(wait, driver):
+    input()
+    perfil_buttons = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@class='nui-avatar-inner']")))
+    driver.execute_script('Window.scrolltTo(0, document.body.scrollHeight);')
+    sleep(2)
+    proximas_atividades = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@class='mt-8']/ul//a[@class='nui-button-icon nui-button-curved nui-button-small nui-button-default flex w-[50px] items-center justify-center']")))
+    print(len(proximas_atividades))
+
+
 # --- Executing ---
 matricula = str(input('Digite sua matricula do net escola: '))
 senha = str(input('Digite sua senha do net escola: '))
@@ -37,4 +46,6 @@ navegar_ate_o_site(driver)
 logar_netescola(matricula, senha, wait)
 sleep(5)
 acessar_sergoias(wait=wait)
+sleep(10)
+selecionar_nova_atividade(wait, driver)
 input()
