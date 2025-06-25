@@ -81,7 +81,7 @@ def e_uma_questao(wait):
 def selecionar_alternativa(wait, index_da_alternativa):
     alternativas = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//ul[@class='h5p-answers']//li")))
     print(alternativas[index_da_alternativa])
-    sleep(2)
+    sleep(1)
     alternativas[index_da_alternativa].click()
 
 
@@ -105,10 +105,7 @@ def responder_questao(driver, wait):
 
     # Seleciona uma alternativa
     selecionar_alternativa(wait, 0)
-    sleep(2)
-    sleep(2)
     verificar_button_click(wait)
-    sleep(2)
 
     # Verifica se o usuario acertou a questão
     acertou = False
@@ -117,15 +114,14 @@ def responder_questao(driver, wait):
     except TimeoutException:
         mensagem_de_acerto = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[text()='Muito bem! Siga para o próximo desafio.']")))
         acertou = True
-    print('Acertou: ', acertou)
-    sleep(1)
+    print('Acertou: ',acertou)
 
     # Avança ou tenta novamente a questão
         # atributo class do botao conluir_atividade: nui-button nui-button-medium nui-button-curved nui-button-solid nui-button-primary
     driver.switch_to.default_content()
-    # input()
     if acertou == False:
         try:
+            # tentar_novamente_button_click() -> Função
             tentar_novamente_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div//span[text()=' Tentar novamente ']")))
             print(tentar_novamente_button)
             sleep(1)
@@ -157,7 +153,7 @@ def completar_atividade_ativa(driver, wait):
     else:
         avancar_button_click(wait)
         print('Um vídeo concluído')
-        sleep(5)
+        sleep(2)
 
 
 # --- Executing ---
