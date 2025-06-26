@@ -85,6 +85,52 @@ def selecionar_alternativa(wait, index_da_alternativa):
     alternativas[index_da_alternativa].click()
 
 
+def tentar_novamente_button_click(wait):
+    # tentar_novamente_button_click() -> Função
+    tentar_novamente_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div//span[text()=' Tentar novamente ']")))
+    print(tentar_novamente_button)
+    sleep(1)
+    tentar_novamente_button.click()
+
+
+def acertou_a_questao(wait):
+    '''Verifica se acertou ou não a questão'''
+    acertou = None
+
+    mensagens_possiveis = {'erro': ['Ops, não foi dessa vez... tente novamente!', 'Ops, não foi dessa vez... Tente novamente!'], 'acerto': ['Parabéns pelo seu desempenho, siga para o próximo desafio.', 'Muito bem! Siga para a próxima questão.']}
+    mensagem_de_feedback = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='h5p-question-feedback-content-text']"))).text
+    print('Mensagem de feedback:', mensagem_de_feedback)
+
+    for key, lista_mensagens in mensagens_possiveis.items():
+        if mensagem_de_feedback in lista_mensagens:
+            if key == 'erro':
+                acertou = False
+            else:
+                acertou = True
+
+    print('Acertou: ',acertou)
+    return acertou
+
+
+def tentar_denovo_avancar_ou_concluir_button_click(wait):
+    botao_em_questao = wait.until(EC.element_to_be_clickable((By.XPATH, "//button/span[@class='me-2 text-sm font-medium']")))
+    texto_do_botao = botao_em_questao.text
+    print('Texto do botao:[',texto_do_botao,']')
+    
+    opcoes = ['Avançar', 'Tentar novamente', 'Concluir atividade']
+    if texto_do_botao in opcoes:
+        sleep(2)
+        botao_em_questao.click()
+    else:
+        print('Texto não encontrado')
+        sleep(2)
+        botao_em_questao.click()
+        opcoes.append(texto_do_botao)
+        print('Novo possível texto de botão adicionado')
+
+    return texto_do_botao
+
+
 def responder_questao(driver, wait):
     # Espera até o quadro de questões aparecer
     # input()
@@ -108,28 +154,19 @@ def responder_questao(driver, wait):
     verificar_button_click(wait)
 
     # Verifica se o usuario acertou a questão
-    acertou = False
-    try:
-        mensagem_de_erro = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[text()='Ops, não foi dessa vez... tente novamente!']")))
-    except TimeoutException:
-        mensagem_de_acerto = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[text()='Muito bem! Siga para o próximo desafio.']")))
-        acertou = True
-    print('Acertou: ',acertou)
-
+    acertou = acertou_a_questao(wait)
+    
     # Avança ou tenta novamente a questão
         # atributo class do botao conluir_atividade: nui-button nui-button-medium nui-button-curved nui-button-solid nui-button-primary
+        # Xpath botao concluir atividade: //div//span[text()='Concluir atividade']
+        # XPATH div de conteúdos: //div//span[text()[contains(.,' Conteúdos: 6/6')]]
+            # Funciona para o concluir: //button/span[@class='me-2 text-sm font-medium']
+            # Funciona para o tentar novamente: //button/span[@class='me-2 text-sm font-medium']
+            # Funciona para o avancar: //button/span[@class='me-2 text-sm font-medium']
     driver.switch_to.default_content()
-    if acertou == False:
-        try:
-            # tentar_novamente_button_click() -> Função
-            tentar_novamente_button = wait.until(EC.element_to_be_clickable((By.XPATH, "//div//span[text()=' Tentar novamente ']")))
-            print(tentar_novamente_button)
-            sleep(1)
-            tentar_novamente_button.click()
-        except TimeoutException:
-            avancar_button_click(wait)
-    else:
-        avancar_button_click(wait)
+    texto_do_botao = tentar_denovo_avancar_ou_concluir_button_click(wait)
+    sleep(2)
+    return texto_do_botao
 
 
 def completar_atividade_ativa(driver, wait):
@@ -142,18 +179,20 @@ def completar_atividade_ativa(driver, wait):
     sleep(2)
 
     # --- Algoritmo que completa as atividades ---
+    texto_do_botao = ''
+    while texto_do_botao != 'Concluir atividade':
+        e_questao = e_uma_questao(wait)
+        print(e_questao)
+        if e_questao == True:
+            sleep(1)
+            texto_do_botao = responder_questao(driver, wait)
+            print('Uma questão concluída')
 
-    e_questao = e_uma_questao(wait)
-    print(e_questao)
-    if e_questao == True:
-        sleep(1)
-        responder_questao(driver, wait)
-        print('Uma questão concluída')
-
-    else:
-        avancar_button_click(wait)
-        print('Um vídeo concluído')
-        sleep(2)
+        else:
+            avancar_button_click(wait)
+            print('Um vídeo concluído')
+            sleep(2)
+    print('Atividade concluída')
 
 
 # --- Executing ---
@@ -161,13 +200,16 @@ matricula = str(input('Digite sua matricula do net escola: '))
 senha = str(input('Digite sua senha do net escola: '))
 from selenium_starting import driver, wait
 original_handle = driver.current_window_handle
+
+# -- Acessando o ser Goiás --
 navegar_ate_o_site(driver)
 logar_netescola(matricula, senha, wait)
 sleep(5)
 acessar_sergoias(wait, driver, original_handle)
 sleep(10)
 
+# - Selecionando e concluíndo próxima atividade
 selecionar_nova_atividade(wait, driver)
 sleep(5)
 completar_atividade_ativa(driver, wait)
-input()
+driver.close()
