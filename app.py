@@ -45,6 +45,8 @@ def selecionar_nova_atividade(wait, driver):
     print(perfil_buttons)
     sleep(2)
     descer_ate_o_fim_da_pagina(driver)
+    sleep(1)
+    driver.execute_script('window.scrollBy(0, -100)')
     sleep(2)
     proxima_atividade = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@class='mt-8']/ul//a[@class='nui-button-icon nui-button-curved nui-button-small nui-button-default flex w-[50px] items-center justify-center']")))
     print(proxima_atividade)
@@ -69,13 +71,23 @@ def verificar_button_click(wait):
 
 def e_uma_questao(wait):
     '''Verifica se o usuário está respondendo uma questão, ou se é apenas uma vídeo aula.'''
-    try:
-        texto_questao = wait.until(EC.visibility_of_element_located((By.XPATH, "//h1[text()='Questões']")))
-        print('É uma questão')
-        return True
-    except TimeoutException:
-        print('Não é uma questão')
-        return False
+    e_uma_questao_value = None
+    titulo_texto = wait.until(EC.visibility_of_element_located((By.XPATH, "//h1[@class='text-2xl font-normal']"))).text
+    print('Texto do título: ',titulo_texto)
+    if 'Quest' in titulo_texto:
+        e_uma_questao_value = True
+    else:
+        e_uma_questao_value = False
+
+    # try:
+    #     texto_questao = wait.until(EC.visibility_of_element_located((By.XPATH, "//h1[text()='Questões']")))
+    #     print('É uma questão')
+    #     return True
+    # except TimeoutException:
+    #     print('Não é uma questão')
+    #     return False
+
+    return e_uma_questao_value
 
 
 def selecionar_alternativa(wait, index_da_alternativa):
@@ -175,14 +187,14 @@ def completar_atividade_ativa(driver, wait):
     sleep(1)
 
     #--- Verifica se a div do video carregou ---
-    wait.until(EC.visibility_of_all_elements_located((By.XPATH, "//div[@class='nui-card nui-card-curved nui-card-white relative p-4 sm:p-6']")))
     sleep(2)
 
     # --- Algoritmo que completa as atividades ---
     texto_do_botao = ''
     while texto_do_botao != 'Concluir atividade':
+        wait.until(EC.visibility_of_all_elements_located((By.XPATH, "//div[@class='nui-card nui-card-curved nui-card-white relative p-4 sm:p-6']")))
         e_questao = e_uma_questao(wait)
-        print(e_questao)
+        print('É questão: ',e_questao)
         if e_questao == True:
             sleep(1)
             texto_do_botao = responder_questao(driver, wait)
