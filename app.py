@@ -1,7 +1,6 @@
+from time import sleep
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from time import sleep
-from selenium.common.exceptions import TimeoutException
 
 
 def navegar_ate_o_site(driver):
@@ -58,6 +57,7 @@ def descer_ate_o_fim_da_pagina(driver):
 
 def avancar_button_click(wait):
     botao_avancar = wait.until(EC.element_to_be_clickable((By.XPATH, "//div//span[text()='Avançar']")))
+    sleep(2)
     print(botao_avancar)
     sleep(2)
     botao_avancar.click()
@@ -78,15 +78,6 @@ def e_uma_questao(wait):
         e_uma_questao_value = True
     else:
         e_uma_questao_value = False
-
-    # try:
-    #     texto_questao = wait.until(EC.visibility_of_element_located((By.XPATH, "//h1[text()='Questões']")))
-    #     print('É uma questão')
-    #     return True
-    # except TimeoutException:
-    #     print('Não é uma questão')
-    #     return False
-
     return e_uma_questao_value
 
 
@@ -145,7 +136,6 @@ def tentar_denovo_avancar_ou_concluir_button_click(wait):
 
 def responder_questao(driver, wait):
     # Espera até o quadro de questões aparecer
-    # input()
 
     # --- Entrar no Iframe ---
     iframe = wait.until(EC.presence_of_element_located((By.XPATH, "//div//iframe")))
@@ -163,22 +153,26 @@ def responder_questao(driver, wait):
 
     # Seleciona uma alternativa
     selecionar_alternativa(wait, 0)
+    sleep(2)
     verificar_button_click(wait)
 
     # Verifica se o usuario acertou a questão
     acertou = acertou_a_questao(wait)
+    sleep(1)
     
     # Avança ou tenta novamente a questão
         # atributo class do botao conluir_atividade: nui-button nui-button-medium nui-button-curved nui-button-solid nui-button-primary
         # Xpath botao concluir atividade: //div//span[text()='Concluir atividade']
         # XPATH div de conteúdos: //div//span[text()[contains(.,' Conteúdos: 6/6')]]
-            # Funciona para o concluir: //button/span[@class='me-2 text-sm font-medium']
-            # Funciona para o tentar novamente: //button/span[@class='me-2 text-sm font-medium']
-            # Funciona para o avancar: //button/span[@class='me-2 text-sm font-medium']
     driver.switch_to.default_content()
+    sleep(1)
     texto_do_botao = tentar_denovo_avancar_ou_concluir_button_click(wait)
     sleep(2)
     return texto_do_botao
+
+
+def voltar_para_home_sergoias(driver):
+    driver.get('https://sergoias.portal.sagreseduca.com.br/dashboards/home-student/')
 
 
 def completar_atividade_ativa(driver, wait):
@@ -201,6 +195,7 @@ def completar_atividade_ativa(driver, wait):
             print('Uma questão concluída')
 
         else:
+            sleep(2)
             avancar_button_click(wait)
             print('Um vídeo concluído')
             sleep(2)
@@ -221,7 +216,11 @@ acessar_sergoias(wait, driver, original_handle)
 sleep(10)
 
 # - Selecionando e concluíndo próxima atividade
-selecionar_nova_atividade(wait, driver)
-sleep(5)
-completar_atividade_ativa(driver, wait)
+for c in range(0, 10):
+    selecionar_nova_atividade(wait, driver)
+    sleep(5)
+    completar_atividade_ativa(driver, wait)
+    voltar_para_home_sergoias(driver)
+print('Atividades concluídas: ', c)
+# input()
 driver.close()
