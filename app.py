@@ -122,9 +122,15 @@ def tentar_denovo_avancar_ou_concluir_button_click(wait, driver):
             botao_em_questao = wait.until(EC.element_to_be_clickable((By.XPATH, "//button/span[@class='me-2 text-sm font-medium']")))
             break
         except TimeoutException:
-            print('Botão em questão não encontrado')
-            driver.refresh()
-            sleep(2)
+            try:
+                botao_em_questao = wait.until(EC.element_to_be_clickable((By.XPATH, "//button/span[@class='me-2 text-sm font-medium']")))
+                break
+            except TimeoutException:
+                print('Botão em questão não encontrado')
+                driver.refresh()
+                sleep(10)
+                break
+                
     texto_do_botao = botao_em_questao.text
     print('Texto do botao:[',texto_do_botao,']')
     
