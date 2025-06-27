@@ -1,6 +1,7 @@
 from time import sleep
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
 
 
 def navegar_ate_o_site(driver):
@@ -115,8 +116,15 @@ def acertou_a_questao(wait):
     return acertou
 
 
-def tentar_denovo_avancar_ou_concluir_button_click(wait):
-    botao_em_questao = wait.until(EC.element_to_be_clickable((By.XPATH, "//button/span[@class='me-2 text-sm font-medium']")))
+def tentar_denovo_avancar_ou_concluir_button_click(wait, driver):
+    for d in range(0, 3):
+        try:
+            botao_em_questao = wait.until(EC.element_to_be_clickable((By.XPATH, "//button/span[@class='me-2 text-sm font-medium']")))
+            break
+        except TimeoutException:
+            print('Botão em questão não encontrado')
+            driver.refresh()
+            sleep(2)
     texto_do_botao = botao_em_questao.text
     print('Texto do botao:[',texto_do_botao,']')
     
@@ -130,7 +138,6 @@ def tentar_denovo_avancar_ou_concluir_button_click(wait):
         botao_em_questao.click()
         opcoes.append(texto_do_botao)
         print('Novo possível texto de botão adicionado')
-
     return texto_do_botao
 
 
@@ -166,7 +173,7 @@ def responder_questao(driver, wait):
         # XPATH div de conteúdos: //div//span[text()[contains(.,' Conteúdos: 6/6')]]
     driver.switch_to.default_content()
     sleep(1)
-    texto_do_botao = tentar_denovo_avancar_ou_concluir_button_click(wait)
+    texto_do_botao = tentar_denovo_avancar_ou_concluir_button_click(wait, driver)
     sleep(2)
     return texto_do_botao
 
@@ -195,7 +202,7 @@ def completar_atividade_ativa(driver, wait):
             print('Uma questão concluída')
 
         else:
-            sleep(2)
+            sleep(5)
             avancar_button_click(wait)
             print('Um vídeo concluído')
             sleep(2)
@@ -216,11 +223,12 @@ acessar_sergoias(wait, driver, original_handle)
 sleep(10)
 
 # - Selecionando e concluíndo próxima atividade
-for c in range(0, 10):
+for c in range(0, 20):
     selecionar_nova_atividade(wait, driver)
     sleep(5)
     completar_atividade_ativa(driver, wait)
     voltar_para_home_sergoias(driver)
+    sleep(10)
 print('Atividades concluídas: ', c)
 # input()
 driver.close()
