@@ -39,7 +39,7 @@ def acessar_sergoias(wait, driver, original_handle):
     print(driver.current_window_handle)
 
 
-def selecionar_nova_atividade(wait, driver):
+def selecionar_nova_atividade(wait, driver, ordem_da_atividade):
     # input("Aperte qualquer tecla")
     perfil_buttons = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//span[@class='nui-avatar-text']")))
     print(perfil_buttons)
@@ -48,10 +48,11 @@ def selecionar_nova_atividade(wait, driver):
     sleep(1)
     driver.execute_script('window.scrollBy(0, -100)')
     sleep(2)
-    proxima_atividade = wait.until(EC.element_to_be_clickable((By.XPATH, "//div[@class='mt-8']/ul//a[@class='nui-button-icon nui-button-curved nui-button-small nui-button-default flex w-[50px] items-center justify-center']")))
-    print(proxima_atividade)
+    atividades = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//div[@class='mt-8']//ul//a")))
+    atividade_selecionada = atividades[ordem_da_atividade]
+    print(atividade_selecionada)
     sleep(1)
-    proxima_atividade.click()
+    atividade_selecionada.click()
 
 def descer_ate_o_fim_da_pagina(driver):
     driver.execute_script('window.scrollTo(0, document.body.scrollHeight)')
@@ -101,7 +102,7 @@ def acertou_a_questao(wait):
     '''Verifica se acertou ou não a questão'''
     acertou = None
 
-    mensagens_possiveis = {'erro': ['Ops, não foi dessa vez... tente novamente!', 'Ops, não foi dessa vez... Tente novamente!'], 'acerto': ['Parabéns pelo seu desempenho, siga para o próximo desafio.', 'Muito bem! Siga para a próxima questão.']}
+    mensagens_possiveis = {'erro': ['Ops, não foi dessa vez... tente novamente!', 'Ops, não foi dessa vez... Tente novamente!', 'Ops, não foi dessa vez... tente novamente!'], 'acerto': ['Parabéns pelo seu desempenho, siga para o próximo desafio.', 'Muito bem! Siga para a próxima questão.', 'Muito bem! Siga para o próximo desafio.']}
     mensagem_de_feedback = wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='h5p-question-feedback-content-text']"))).text
     print('Mensagem de feedback:', mensagem_de_feedback)
 
@@ -111,6 +112,11 @@ def acertou_a_questao(wait):
                 acertou = False
             else:
                 acertou = True
+
+        else:
+            print('Mensagem de feedback não encontrada dentre as já registradas.')
+            print('Tomando como "acerto" para prosseguir o programa.')
+            acertou = True
 
     print('Acertou: ',acertou)
     return acertou
@@ -202,22 +208,29 @@ def completar_atividade_ativa(driver, wait):
         wait.until(EC.visibility_of_all_elements_located((By.XPATH, "//div[@class='nui-card nui-card-curved nui-card-white relative p-4 sm:p-6']")))
         e_questao = e_uma_questao(wait)
         print('É questão: ',e_questao)
-        if e_questao == True:
-            sleep(1)
-            texto_do_botao = responder_questao(driver, wait)
-            print('Uma questão concluída')
+        for c in range(0,2):
+            try:
+                if e_questao == True:
+                    sleep(1)
+                    texto_do_botao = responder_questao(driver, wait)
+                    print('Uma questão concluída')
+                    break
 
-        else:
-            sleep(5)
-            avancar_button_click(wait)
-            print('Um vídeo concluído')
-            sleep(2)
+                else:
+                    sleep(5)
+                    avancar_button_click(wait)
+                    print('Um vídeo concluído')
+                    sleep(2)
+                    break
+            except TimeoutException:
+                driver.refresh()
     print('Atividade concluída')
 
 
 # --- Executing ---
 matricula = str(input('Digite sua matricula do net escola: '))
 senha = str(input('Digite sua senha do net escola: '))
+ordem_da_atividade = int(input('Digite a ordem da atividade a ser selecionada: '))
 from selenium_starting import driver, wait
 original_handle = driver.current_window_handle
 
@@ -229,8 +242,8 @@ acessar_sergoias(wait, driver, original_handle)
 sleep(10)
 
 # - Selecionando e concluíndo próxima atividade
-for c in range(0, 20):
-    selecionar_nova_atividade(wait, driver)
+for c in range(0, 40):
+    selecionar_nova_atividade(wait, driver, ordem_da_atividade)
     sleep(5)
     completar_atividade_ativa(driver, wait)
     voltar_para_home_sergoias(driver)
